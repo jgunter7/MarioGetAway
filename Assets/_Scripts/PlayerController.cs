@@ -1,4 +1,13 @@
-﻿using UnityEngine;
+﻿
+/*
+ *      File:                   PlayerController.cs
+ *      Authors Name:           Jason Gunter
+ *      Last Modified By:       Jason Gunter
+ *      Date Last Modified:     October 18th, 2016
+ *      Description:            A unity platform game featuring mario escaping from jail :) - jgunter
+ *      Revision History:       https://github.com/jgunter7/MarioGetAway/commits/master 
+ */
+using UnityEngine;
 using System.Collections;
 
 public class PlayerController : MonoBehaviour {
@@ -18,13 +27,18 @@ public class PlayerController : MonoBehaviour {
 
     //Public Variables:
     [Header("Player Movement")]
-    public float Velocity = 20f;
+    public float Velocity = 200f;
     public float JumpForce = 100f;
 
     [Header("Sound Clips")]
     public AudioSource JumpSound;
     public AudioSource DeathSound;
     public AudioSource CoinSound;
+    public AudioSource EnemyDeathSound;
+
+    [Header("Ray-Casting Objects")]
+    public Transform SightStart;
+    public Transform SightEnd;
 
     // Use this for initialization
     void Start() {
@@ -32,6 +46,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     // FIXEDUPDATE is called once per frame (Physics)
+    //  move the player around in the scene
     void FixedUpdate() {
         if (this._isGrounded) {
             this._move = Input.GetAxis("Horizontal");
@@ -65,6 +80,10 @@ public class PlayerController : MonoBehaviour {
 
         this._cam.transform.position = new Vector3(this._transform.position.x, this._transform.position.y, -10f);
         this._DeathPlane.transform.position = new Vector3(this._transform.position.x, -12, 0f);
+
+        this._isGrounded = Physics2D.Linecast(
+                this.SightStart.position, this.SightEnd.position,
+                1 << LayerMask.NameToLayer("Solid"));
     }
 
     // Private Methods:
@@ -96,12 +115,6 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    private void OnCollisionStay2D(Collision2D other) {
-        if (other.gameObject.CompareTag("Platform")) {
-            this._isGrounded = true;
-        }
-    }
-
     private void OnCollisionExit2D(Collision2D other) {
         this._isGrounded = false;
         this._animator.SetInteger("HeroState", 2);
@@ -113,10 +126,6 @@ public class PlayerController : MonoBehaviour {
             this.DeathSound.Play();
             this._gameController.LivesValue -= 1;
             this._transform.position = this._SpawnPoint.transform.position;
-        } else if(other.gameObject.CompareTag("Coin")) {
-            this.CoinSound.Play();
-            Destroy(other.gameObject);
-            this._gameController.ScoreValue += 10;
         } else if (other.gameObject.CompareTag("Enemy_Mush")) {
             this.DeathSound.Play();
             this._gameController.LivesValue -= 1;
@@ -125,10 +134,19 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void OnTriggerEnter2D(Collider2D other) {
+        // Any triggers are handled here:
         if (other.gameObject.CompareTag("Enemy_Mush")) {
-            GetComponent<AudioSource>().Play(); //get the only audio source and play it. - jgunter
+            this.EnemyDeathSound.Play();
             this._gameController.ScoreValue += 50;
             Destroy(other.gameObject);
+        } else if (other.gameObject.CompareTag("Coin")) {
+            this.CoinSound.Play();
+            Destroy(other.gameObject);
+            this._gameController.ScoreValue += 10;
+        } else if (other.gameObject.CompareTag("Enemy_Helo")) {
+            this.DeathSound.Play();
+            this._gameController.LivesValue -= 1;
+            this._transform.position = this._SpawnPoint.transform.position;
         }
     }
 }
