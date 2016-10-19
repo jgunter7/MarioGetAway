@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
  *      File:                   PlayerController.cs
  *      Authors Name:           Jason Gunter
  *      Last Modified By:       Jason Gunter
@@ -27,7 +26,7 @@ public class PlayerController : MonoBehaviour {
 
     //Public Variables:
     [Header("Player Movement")]
-    public float Velocity = 200f;
+    public float Velocity = 10f;
     public float JumpForce = 100f;
 
     [Header("Sound Clips")]
@@ -39,6 +38,7 @@ public class PlayerController : MonoBehaviour {
     [Header("Ray-Casting Objects")]
     public Transform SightStart;
     public Transform SightEnd;
+    public Transform SightEndTwo;
 
     // Use this for initialization
     void Start() {
@@ -81,9 +81,13 @@ public class PlayerController : MonoBehaviour {
         this._cam.transform.position = new Vector3(this._transform.position.x, this._transform.position.y, -10f);
         this._DeathPlane.transform.position = new Vector3(this._transform.position.x, -12, 0f);
 
-        this._isGrounded = Physics2D.Linecast(
+        this._isGrounded = (Physics2D.Linecast(
                 this.SightStart.position, this.SightEnd.position,
-                1 << LayerMask.NameToLayer("Solid"));
+                1 << LayerMask.NameToLayer("Solid"))
+                ||
+                Physics2D.Linecast(
+                this.SightStart.position, this.SightEndTwo.position,
+                1 << LayerMask.NameToLayer("Solid")));
     }
 
     // Private Methods:
@@ -118,6 +122,12 @@ public class PlayerController : MonoBehaviour {
     private void OnCollisionExit2D(Collision2D other) {
         this._isGrounded = false;
         this._animator.SetInteger("HeroState", 2);
+    }
+
+    private void OnCollisionStay2D(Collision2D other) {
+        if (other.gameObject.CompareTag("Winner") && this._isGrounded) {
+            this._gameController.LivesValue = 0;
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D other) {

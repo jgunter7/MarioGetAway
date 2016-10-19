@@ -7,7 +7,7 @@
  *      Revision History:       https://github.com/jgunter7/MarioGetAway/commits/master 
  */
 using UnityEngine;
-using System.Collections;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameController : MonoBehaviour {
@@ -19,6 +19,9 @@ public class GameController : MonoBehaviour {
     [Header("UI Objects")]
     public Text LivesLabel;
     public Text ScoreLabel;
+    public Text GameOverLabel;
+    public Text FinalScoreLabel;
+    public Button RestartButton;
 
     public int LivesValue {
         get {
@@ -28,7 +31,7 @@ public class GameController : MonoBehaviour {
         set {
             this._lives = value;
             if (this._lives <= 0) {
-                //this._endGame();
+                this._endGame();
             } else {
                 this.LivesLabel.text = "Lives: " + this._lives;
             }
@@ -51,10 +54,30 @@ public class GameController : MonoBehaviour {
     void Start () {
         this.ScoreValue = 0;
         this.LivesValue = 10; // very generous! - jgunter
+        // hide items at start:
+        this.GameOverLabel.gameObject.SetActive(false);
+        this.FinalScoreLabel.gameObject.SetActive(false);
+        this.RestartButton.gameObject.SetActive(false);
 	}
 	
 	// Update is called once per frame
 	void Update () {
 	
 	}
+
+    void _endGame() {
+        this.LivesLabel.gameObject.SetActive(false);
+        this.ScoreLabel.gameObject.SetActive(false);
+        // SET GAME OVER SCREEN ! - jgunter
+        var player = GameObject.FindWithTag("Player");
+        player.gameObject.SetActive(false); // get rid of the player component
+        this.GameOverLabel.gameObject.SetActive(true);
+        this.FinalScoreLabel.gameObject.SetActive(true);
+        this.RestartButton.gameObject.SetActive(true);
+        this.FinalScoreLabel.text = "Final Score: " + this._score;
+    }
+
+    public void RestartButton_Click() {
+        SceneManager.LoadScene("Play");
+    }
 }
